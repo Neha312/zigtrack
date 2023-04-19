@@ -12,6 +12,6 @@ class Primary_Skill extends Model
     protected $table = 'primary_skills';
     public function users()
     {
-        return $this->belongsToMany(User::class, 'primary_skill_users', 'primary_skill_id', 'user_id')->withPivot('type');
+        return $this->belongsToMany(User::class, 'primary_skill_users', 'primary_skill_id', 'user_id')->select('id', 'name', 'manage_by', 'reporting_to');
     }
 }
