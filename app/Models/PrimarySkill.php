@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Http\Traits\Uuids;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Primary_Skill extends Model
+class PrimarySkill extends Model
 {
-    use HasFactory, Uuids;
+    use Uuids;
     protected $table = 'primary_skills';
+
+    /* Primary skill belongs to many user */
     public function users()
     {
         return $this->belongsToMany(User::class, 'primary_skill_users', 'primary_skill_id', 'user_id')->select('id', 'name', 'manage_by', 'reporting_to');

@@ -2,66 +2,72 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Primary_Skill;
-use App\Models\Primary_Skill_User;
-use App\Models\Resource_Plan;
-use App\Models\User;
+use App\Models\PrimarySkill;
 use Illuminate\Http\Request;
 
 class ReportController extends Controller
 {
-    protected $skills;
-    public function index(Request $request)
+    public function skillReport(Request $request)
     {
         // validation
         $this->validate($request, [
-            // 'page'              => 'nullable|integer',
-            // 'perPage'           => 'nullable|integer',
-            'manage_by'         => 'required|string',
-            'reporting_to'      => 'required|string',
-            'year'              => 'required|date_format:Y',
-            'month'             => 'required|date_format:m',
+            'manage_by'         => 'required|string|exists:users,manage_by',
+            'reporting_to'      => 'required|string|exists:users,reporting_to',
+            'year'              => 'required|date_format:Y|exists:resource_plans,year',
+            'month'             => 'required|date_format:m|exists:resource_plans,month',
         ]);
-        $query = Primary_Skill::query();
+        $primarySkills = PrimarySkill::query();
         if ($request->manage_by && $request->reporting_to) {
-            $query->whereHas('users', function ($query) use ($request) {
+            $skill = $primarySkills->whereHas('users', function ($query) use ($request) {
                 $query->where('manage_by', $request->manage_by)
                     ->where('reporting_to', $request->reporting_to);
             });
         }
-        $this->skills = [];
-        $query->with('users.resourcePlan', function ($query) use ($request) {
-            $query->where('year', $request->year)
-                ->where('month', $request->month);
-
+        $skills = $skill->get();
+        $totalAvailable = 0;
+        $totalfullTime  = 0;
+        $totalpartTime  = 0;
+        foreach ($skills as $key => $skill) {
+            $users = $skill->users()->get();
             $fullTime  = 0;
             $partTime  = 0;
             $available = 0;
-            foreach ($query->get() as $skill) {
-                if ($skill->planned_hours > 120) {
+            foreach ($users as $user) {
+                $resources = $user->resourcePlan()
+                    ->where('year', $request->year)
+                    ->where('month', $request->month)->sum('planned_hours');
+                if ($resources > 120) {
                     $fullTime = $fullTime + 1;
-                } elseif ($skill->planned_hours > 40 && $skill->planned_hours < 119) {
+                    $totalfullTime = $totalfullTime + 1;
+                } elseif ($resources > 40 && $resources < 119) {
                     $partTime = $partTime + 1;
-                } elseif ($skill->planned_hours > 0 && $skill->planned_hours < 39) {
+                    $totalpartTime = $totalpartTime + 1;
+                } elseif ($resources > 0 && $resources < 39) {
                     $available = $available + 1;
+                    $totalAvailable = $totalAvailable + 1;
                 }
+                //total count
+                $totalCount = $fullTime + $partTime +  $available;
+                $totalSkillCount = $totalfullTime + $totalpartTime +  $totalAvailable;
+
+                $skills[$key]['skill_count'] = [
+                    'full_time'     => $fullTime,
+                    'part_time'     => $partTime,
+                    'available'     => $available,
+                    'total_count'   => $totalCount
+                ];
             }
-            $totalCount = $fullTime + $partTime +  $available;
-            $this->skills = ['fulltime' => $fullTime, 'parttime' => $partTime, 'available' => $available, 'total_count' => $totalCount];
-        });
-        // dd($this->skills);
-        $data = $query->get();
-        /* Pagination */
-        $count = $query->count();
-        if ($request->page && $request->perPage) {
-            $page    = $request->page;
-            $perPage = $request->perPage;
-            $query   = $query->skip($perPage * ($page - 1))->take($perPage);
         }
+
+        /* Count */
+        $count = $primarySkills->count();
         return response()->json([
-            'count' => $count,
-            'skill' => $this->skills,
-            'data'  => $data
+            'count'             => $count,
+            'skills'            => $skills,
+            'total_full_time'   => $totalfullTime,
+            'total_part_time'   => $totalpartTime,
+            'total_available'   => $totalAvailable,
+            'total_skill_count' => $totalSkillCount,
         ]);
     }
 }

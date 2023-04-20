@@ -19,4 +19,4 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // });
 
-Route::post('index', [ReportController::class, 'index']);
+Route::post('skillReport', [ReportController::class, 'skillReport']);

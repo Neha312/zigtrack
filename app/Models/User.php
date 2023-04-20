@@ -5,14 +5,11 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Http\Traits\Uuids;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, Uuids;
+    use Uuids;
     protected $table = 'users';
     /**
      * The attributes that are mass assignable.
@@ -44,12 +41,14 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    /*User belongs to many primary skill*/
     public function skills()
     {
-        return $this->belongsToMany(Primary_Skill::class, 'primary_skill_users', 'user_id', 'primary_skill_id');
+        return $this->belongsToMany(PrimarySkill::class, 'primary_skill_users', 'user_id', 'primary_skill_id');
     }
+    /*User has many resource plan*/
     public function resourcePlan()
     {
-        return $this->hasMany(Resource_Plan::class, 'user_id')->select('id', 'user_id', 'project_id', 'year', 'month', 'planned_hours');
+        return $this->hasMany(ResourcePlan::class, 'user_id')->select('id', 'user_id', 'project_id', 'year', 'month', 'planned_hours');
     }
 }

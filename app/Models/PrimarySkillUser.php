@@ -3,11 +3,10 @@
 namespace App\Models;
 
 use App\Http\Traits\Uuids;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Primary_Skill_User extends Model
+class PrimarySkillUser extends Model
 {
-    use HasFactory, Uuids;
+    use Uuids;
     protected $table = 'primary_skill_users';
 }
