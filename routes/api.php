@@ -20,3 +20,4 @@ use Illuminate\Support\Facades\Route;
 // });
 
 Route::post('skillReport', [ReportController::class, 'skillReport']);
+Route::post('report', [ReportController::class, 'report']);

@@ -51,4 +51,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(ResourcePlan::class, 'user_id')->select('id', 'user_id', 'project_id', 'year', 'month', 'planned_hours');
     }
+
+    // public function getFullNameAttribute()
+    // {
+    //     return $this->name . ' ' . $this->last_name;
+    // }
 }
